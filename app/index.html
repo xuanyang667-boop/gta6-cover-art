@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Vice — GTA 6-style Cover Maker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<noscript><p class="noscript">Neon Vice needs JavaScript enabled: the cover is drawn live in your browser and your photos never leave your machine.</p></noscript>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">NV</span><span class="brand-name">Neon Vice <em>Cover Studio</em></span></div>
+  <p class="tagline">Turn your photo into a GTA 6-style poster cover. Your photos never leave your machine.</p>
+</header>
+
+<main class="editor" id="editorView">
+  <section class="preview-pane">
+    <canvas id="preview" width="640" height="640"></canvas>
+    <p id="sizeNote" class="size-note"></p>
+    <ol class="steps">
+      <li>Pick a layout and a colour grade.</li>
+      <li>Add a photo to each panel — upload your own or try a sample.</li>
+      <li>Write your caption, then export a PNG to share.</li>
+    </ol>
+  </section>
+
+  <aside class="controls">
+    <section class="control-group">
+      <h2>1 · Layout</h2>
+      <div class="choice-row" id="layoutBtns">
+        <button type="button" data-value="duo">Diagonal Duo</button>
+        <button type="button" data-value="grid">Comic Grid</button>
+        <button type="button" data-value="hero">Hero Strip</button>
+      </div>
+      <p class="hint">Two photos on a diagonal, four comic panels, or one hero photo with two small ones below.</p>
+    </section>
+
+    <section class="control-group">
+      <h2>2 · Colour grade</h2>
+      <div class="choice-row" id="gradeBtns">
+        <button type="button" data-value="sunset">Vice Sunset</button>
+        <button type="button" data-value="neon">Neon Nights</button>
+        <button type="button" data-value="noir">Noir</button>
+        <button type="button" data-value="vivid">Vivid Day</button>
+      </div>
+      <p class="hint">A sunset or neon wash over every panel, like a Vice City poster.</p>
+    </section>
+
+    <section class="control-group">
+      <h2>3 · Caption</h2>
+      <label class="field"><span>Kicker</span><input id="kickerInput" type="text" maxlength="24" autocomplete="off"></label>
+      <label class="field"><span>Title</span><input id="titleInput" type="text" maxlength="28" autocomplete="off"></label>
+      <label class="field"><span>Subtitle</span><input id="subtitleInput" type="text" maxlength="60" autocomplete="off"></label>
+    </section>
+
+    <section class="control-group">
+      <h2>4 · Photos</h2>
+      <button type="button" class="btn" id="fillAllBtn">Fill all panels with the first photo</button>
+      <div id="panelList"></div>
+    </section>
+
+    <section class="control-group">
+      <h2>5 · Size &amp; export</h2>
+      <div class="choice-row" id="sizeBtns">
+        <button type="button" data-value="square">1080 × 1080</button>
+        <button type="button" data-value="portrait">1080 × 1350</button>
+        <button type="button" data-value="wide">1920 × 1080</button>
+      </div>
+      <button type="button" class="btn btn-primary" id="exportBtn">Export PNG</button>
+    </section>
+  </aside>
+</main>
+
+<canvas id="shotCanvas" class="shot-canvas"></canvas>
+
+<footer class="foot">An original fan-made cover tool, built for the make.fun GTA 6 cover art bounty. Not affiliated with Rockstar Games. Type: Noto Sans (SIL Open Font License 1.1).</footer>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
