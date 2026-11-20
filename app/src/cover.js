@@ -326,7 +326,17 @@ export function renderCover(canvas, state) {
   const polys = panelPolygons(state.layout || 'duo', w, h);
   const photos = state.photos || [];
   polys.forEach((poly, i) => {
-    drawPhotoPanel(ctx, poly, photos[i] || null, grade, i);
+    // Hero top panel: the panel is wide while the photos are portrait,
+    // so a cover fit crops the photo top and bottom equally and the
+    // subject's face is cut off at the top edge. Anchor the crop to the
+    // top of the photo (oy +1 moves the image down so the panel shows
+    // its top) unless the user has panned it, so the face stays in
+    // frame; the caption sits over the bottom anyway.
+    let photo = photos[i] || null;
+    if (photo && state.layout === 'hero' && i === 0 && (photo.oy || 0) === 0) {
+      photo = { ...photo, oy: 1 };
+    }
+    drawPhotoPanel(ctx, poly, photo, grade, i);
   });
 
   drawGradeWash(ctx, w, h, grade);
