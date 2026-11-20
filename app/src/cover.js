@@ -169,12 +169,18 @@ function drawPhotoPanel(ctx, poly, photo, grade, index) {
   ctx.restore();
 }
 
-// Shrink text until it fits the given width, then draw it centred.
+// Largest pixel size (at most 100) at which the text fits maxWidth.
 // fontForSize takes a pixel size and returns a full canvas font string.
-function drawFittedText(ctx, text, cx, y, maxWidth, fontForSize, fill, stroke) {
+function fitTextSize(ctx, text, maxWidth, fontForSize) {
   let px = 100;
   const measure = (size) => { ctx.font = fontForSize(size); return ctx.measureText(text).width; };
   while (px > 12 && measure(px) > maxWidth) px -= 4;
+  return px;
+}
+
+// Shrink text until it fits the given width, then draw it centred.
+function drawFittedText(ctx, text, cx, y, maxWidth, fontForSize, fill, stroke) {
+  const px = fitTextSize(ctx, text, maxWidth, fontForSize);
   ctx.font = fontForSize(px);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -191,66 +197,84 @@ function drawFittedText(ctx, text, cx, y, maxWidth, fontForSize, fill, stroke) {
 }
 
 // Draw the caption block: kicker, big title, subtitle bar.
+//
+// Laid out from the bottom up so the three lines never overlap and the
+// block always ends with a margin inside the canvas: the subtitle bar sits
+// a fixed margin above the bottom edge, the title above it, the kicker
+// above the title. The title's fitted size is measured before anything is
+// placed, so its real height sets the spacing (the old top-down layout let
+// the title's lower half slide under the subtitle bar).
 function drawCaption(ctx, w, h, state) {
   const pad = Math.round(w * 0.045);
   const title = (state.title || 'UNTITLED').toUpperCase();
   const subtitle = state.subtitle || '';
   const kicker = state.kicker || '';
-  const bandH = Math.round(h * 0.235);
-  const bandY = h - bandH;
+  const cx = w / 2;
 
-  // Dark legibility gradient behind the caption.
-  const leg = ctx.createLinearGradient(0, bandY - bandH * 0.7, 0, h);
+  // Title font: condensed 900, fitted to the canvas width.
+  const titleFont = (s) => `900 ${s}px ViceCondensed, 'Arial Narrow', sans-serif`;
+  const fitted = fitTextSize(ctx, title, w - pad * 2, titleFont);
+  // Caps sit roughly ±0.38em around a 'middle' baseline.
+  const titleHalf = Math.round(fitted * 0.38);
+  const titleSize = Math.round(h * 0.105);
+
+  const subSize = Math.round(h * 0.026);
+  const barH = subSize + Math.round(h * 0.016);
+  const bottomMargin = Math.round(h * 0.032);
+  const gapTitleSub = Math.round(h * 0.028);
+  const gapKickerTitle = Math.round(h * 0.022);
+  const kickerSize = Math.round(h * 0.02);
+
+  const subY = h - bottomMargin - barH / 2;
+  const titleY = subY - barH / 2 - gapTitleSub - titleHalf;
+  const kickerY = titleY - titleHalf - gapKickerTitle - kickerSize / 2;
+  const ruleY = kickerY - kickerSize / 2 - Math.round(h * 0.012);
+
+  // Dark legibility gradient behind the whole caption block.
+  const legTop = Math.max(0, ruleY - Math.round(h * 0.05));
+  const leg = ctx.createLinearGradient(0, legTop, 0, h);
   leg.addColorStop(0, 'rgba(8, 4, 24, 0)');
   leg.addColorStop(1, 'rgba(8, 4, 24, 0.82)');
   ctx.fillStyle = leg;
-  ctx.fillRect(0, bandY - bandH * 0.7, w, h - (bandY - bandH * 0.7));
+  ctx.fillRect(0, legTop, w, h - legTop);
 
-  // Pink accent rule above the title.
+  // Pink accent rule above the kicker.
   ctx.fillStyle = '#ff2975';
-  ctx.fillRect(pad, bandY + Math.round(h * 0.018), Math.round(w * 0.16), Math.max(3, Math.round(h * 0.006)));
-
-  const cx = w / 2;
-  let cursor = bandY + Math.round(h * 0.075);
+  ctx.fillRect(pad, ruleY, Math.round(w * 0.16), Math.max(3, Math.round(h * 0.006)));
 
   if (kicker) {
     ctx.save();
     try { ctx.letterSpacing = `${Math.round(w * 0.006)}px`; } catch (e) { /* older canvas */ }
-    ctx.font = `700 ${Math.round(h * 0.02)}px ViceBold, sans-serif`;
+    ctx.font = `700 ${kickerSize}px ViceBold, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffd319';
-    ctx.fillText(kicker.toUpperCase(), cx, cursor);
+    ctx.fillText(kicker.toUpperCase(), cx, kickerY);
     ctx.restore();
-    cursor += Math.round(h * 0.038);
   }
 
   // Big condensed title with a sunset fill and a black outline.
-  const titleSize = Math.round(h * 0.105);
-  const grad = ctx.createLinearGradient(0, cursor - titleSize / 2, 0, cursor + titleSize / 2);
+  const grad = ctx.createLinearGradient(0, titleY - titleHalf, 0, titleY + titleHalf);
   grad.addColorStop(0, '#fff7d6');
   grad.addColorStop(0.45, '#ffd319');
   grad.addColorStop(1, '#ff2975');
   ctx.save();
-  ctx.translate(cx, cursor + titleSize * 0.42);
+  ctx.translate(cx, titleY);
   ctx.rotate(-0.018);
-  ctx.translate(-cx, -(cursor + titleSize * 0.42));
+  ctx.translate(-cx, -titleY);
   drawFittedText(
-    ctx, title, cx, cursor + titleSize * 0.42, w - pad * 2,
-    (s) => `900 ${s}px ViceCondensed, 'Arial Narrow', sans-serif`,
+    ctx, title, cx, titleY, w - pad * 2,
+    titleFont,
     grad, { color: 'rgba(8,4,24,0.95)', width: Math.max(4, Math.round(titleSize * 0.09)) },
   );
   ctx.restore();
 
   if (subtitle) {
-    const subY = bandY + bandH - Math.round(h * 0.045);
-    const subSize = Math.round(h * 0.026);
     ctx.save();
     ctx.font = `700 ${subSize}px ViceBold, sans-serif`;
     const tw = ctx.measureText(subtitle).width;
     const barPad = Math.round(w * 0.02);
     const barW = Math.min(tw + barPad * 2, w - pad * 2);
-    const barH = subSize + Math.round(h * 0.016);
     ctx.fillStyle = 'rgba(8, 4, 24, 0.88)';
     ctx.fillRect(cx - barW / 2, subY - barH / 2, barW, barH);
     ctx.fillStyle = '#ffffff';

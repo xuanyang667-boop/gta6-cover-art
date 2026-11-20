@@ -38,6 +38,7 @@ async function main() {
   const editor = wireEditor(collectElements(), state);
   if (params.shot === 'editor') {
     await runEditorShot(editor.state, params);
+    editor.syncControls();
     editor.refreshPanels();
   }
   editor.render();

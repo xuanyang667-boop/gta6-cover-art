@@ -224,6 +224,19 @@ export function wireEditor(els, initialState) {
     ));
   }
 
+  // Copy the live state back into the controls: caption inputs and the
+  // active layout / grade / size buttons. Screenshot mode changes the state
+  // after wiring, so without this the inputs show the defaults while the
+  // preview shows the shot's caption and layout.
+  function syncControls() {
+    if (els.layoutBtns) markActive(els.layoutBtns, state.layout);
+    if (els.gradeBtns) markActive(els.gradeBtns, state.grade);
+    if (els.sizeBtns) markActive(els.sizeBtns, state.size);
+    if (els.titleInput) els.titleInput.value = state.title;
+    if (els.subtitleInput) els.subtitleInput.value = state.subtitle;
+    if (els.kickerInput) els.kickerInput.value = state.kicker;
+  }
+
   function markActive(group, value) {
     group.querySelectorAll('button').forEach((b) => {
       b.classList.toggle('active', b.dataset.value === value);
@@ -283,7 +296,7 @@ export function wireEditor(els, initialState) {
   }
 
   refreshPanels();
-  return { state, render, requestRender, refreshPanels };
+  return { state, render, requestRender, refreshPanels, syncControls };
 }
 
 // Load the bundled fonts, then render once. Falls back silently if a font
